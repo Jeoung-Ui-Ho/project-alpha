@@ -1,0 +1,37 @@
+# .github/workflows/ci.yml
+name: CI Pipeline - Build and Push Docker Image
+
+# 어떤 이벤트가 발생했을 때 이 워크플로우를 실행할지 정의합니다.
+on:
+  push:
+    branches:
+      - main # main 브랜치에 코드가 푸시될 때 워크플로우 실행
+
+# 워크플로우가 실행될 작업들을 정의합니다.
+jobs:
+  build-and-push:
+    # 워크플로우가 실행될 환경을 정의합니다. (Ubuntu 최신 버전)
+    runs-on: ubuntu-latest
+
+    # 작업 단계를 정의합니다.
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4 # GitHub Repository 코드를 워크플로우 환경으로 가져옵니다.
+
+    - name: Set up Docker BuildX
+      uses: docker/setup-buildx-action@v3 # Docker BuildX를 설정하여 이미지 빌드를 최적화합니다.
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }} # GitHub Secrets에 저장된 Docker Hub 사용자 이름을 사용합니다.
+        password: ${{ secrets.DOCKER_ACCESS_TOKEN }} # GitHub Secrets에 저장된 Docker Hub Access Token을 사용합니다.
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: . # Dockerfile이 있는 현재 디렉토리를 빌드 컨텍스트로 사용합니다.
+        push: true # 이미지를 Docker Hub로 푸시합니다.
+        tags: ${{ secrets.DOCKER_USERNAME }}/flask-hello-pipeline:latest # 이미지 태그를 정의합니다. (예: your-dockerhub-username/flask-hello-pipeline:latest)
+        cache-from: type=gha # GitHub Actions 캐시를 사용하여 빌드 속도를 높입니다.
+        cache-to: type=gha,mode=max # 빌드된 캐시를 GitHub Actions에 저장합니다.
