@@ -1,6 +1,8 @@
 # Dockerfile
-# 공식 Python 3.9 slim-buster 이미지를 베이스로 사용합니다.
-FROM python:3.9-slim-buster
+# 변경 전: FROM python:3.9-slim-buster
+# 변경 후: Debian 10 (buster) 대신 Debian 12 (bookworm) 기반의 slim 이미지를 사용합니다.
+# 또는 더 최신 버전을 원하시면 3.10, 3.11 등으로 변경하셔도 됩니다.
+FROM python:3.9-slim-bookworm
     
 # 작업 디렉토리를 /app으로 설정합니다.
 WORKDIR /app
