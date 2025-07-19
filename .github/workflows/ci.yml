@@ -26,7 +26,7 @@ jobs:
         command: code test # Snyk Code 스캔 명령
         args: --severity-threshold=high # 심각도 'high' 이상인 경우에만 실패로 처리
         # fail-on: all # (선택 사항) 어떤 경우에 워크플로우를 실패시킬지 정의. 여기서는 args로 제어.
-      continue-on-error: true # (선택 사항) Snyk 스캔 실패 시에도 다음 단계 진행 (배포 중단 여부는 나중에 설정)
+      continue-on-error: false # (선택 사항) Snyk 스캔 실패 시에도 다음 단계 진행 (배포 중단 여부는 나중에 설정)
       # 'continue-on-error: true'는 개발 초기 단계에서 스캔 결과를 확인하기 위해 사용할 수 있습니다.
       # 실제 프로덕션 파이프라인에서는 보안 정책에 따라 이 값을 'false'로 설정하거나 아예 제거하여
       # 취약점 발견 시 빌드가 실패하도록 하는 것이 일반적입니다.
@@ -50,3 +50,14 @@ jobs:
         tags: ${{ secrets.DOCKER_USERNAME }}/flask-hello-pipeline:latest # 이미지 태그를 정의합니다. (예: your-dockerhub-username/flask-hello-pipeline:latest)
         cache-from: type=gha # GitHub Actions 캐시를 사용하여 빌드 속도를 높입니다.
         cache-to: type=gha,mode=max # 빌드된 캐시를 GitHub Actions에 저장합니다.
+
+    - name: Run Trivy vulnerability scan (SCA)
+      uses: aquasecurity/trivy-action@master # Trivy 공식 GitHub Actions 사용
+      with:
+        # 스캔할 Docker 이미지 태그를 지정합니다.
+        image-ref: ${{ secrets.DOCKER_USERNAME }}/flask-hello-pipeline:latest
+        format: 'table' # 결과를 표 형식으로 출력
+        exit-code: '1' # 취약점이 발견되면 워크플로우를 실패시킴
+        ignore-unfixed: true # 패치되지 않은 취약점은 무시 (선택 사항, 엄격하게 하려면 false)
+        vuln-type: 'os,library' # OS 패키지 및 라이브러리 취약점 스캔
+        severity: 'HIGH,CRITICAL' # HIGH 또는 CRITICAL 심각도만 보고하고 실패 처리
