@@ -17,6 +17,21 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4 # GitHub Repository 코드를 워크플로우 환경으로 가져옵니다.
+  
+    - name: Run Snyk Code Scan (SAST)
+      uses: snyk/actions/golang@master # Snyk 공식 GitHub Actions 사용
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }} # GitHub Secret에서 Snyk 토큰 가져오기
+      with:
+        command: code test # Snyk Code 스캔 명령
+        args: --severity-threshold=high # 심각도 'high' 이상인 경우에만 실패로 처리
+        # fail-on: all # (선택 사항) 어떤 경우에 워크플로우를 실패시킬지 정의. 여기서는 args로 제어.
+      continue-on-error: true # (선택 사항) Snyk 스캔 실패 시에도 다음 단계 진행 (배포 중단 여부는 나중에 설정)
+      # 'continue-on-error: true'는 개발 초기 단계에서 스캔 결과를 확인하기 위해 사용할 수 있습니다.
+      # 실제 프로덕션 파이프라인에서는 보안 정책에 따라 이 값을 'false'로 설정하거나 아예 제거하여
+      # 취약점 발견 시 빌드가 실패하도록 하는 것이 일반적입니다.
+      # 지금은 `args: --severity-threshold=high`로 실패 기준을 설정했으므로,
+      # 이 옵션은 잠시 true로 두어 스캔 결과를 보며 조정할 수 있도록 합니다.
 
     - name: Set up Docker BuildX
       uses: docker/setup-buildx-action@v3 # Docker BuildX를 설정하여 이미지 빌드를 최적화합니다.
